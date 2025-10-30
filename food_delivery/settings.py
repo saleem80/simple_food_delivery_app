@@ -178,8 +178,7 @@ if PRODUCTION:
         'https://www.simple-food-delivery-app.onrender.com',
     ]
 
-    # Security settings
-    SECURE_SSL_REDIRECT = True
+    # Security settings (Render handles SSL, so no SECURE_SSL_REDIRECT needed)
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
