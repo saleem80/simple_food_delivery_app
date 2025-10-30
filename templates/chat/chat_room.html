@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat - Booking #{{ booking.id }} - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Chat - Booking #{{ booking.id }}</h3>
+        <div>
+            <span class="badge badge-{{ booking.status }}">{{ booking.get_status_display }}</span>
+            <span class="text-muted">with {{ other_user.mobile_number }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                {% for message in messages %}
+                    <div class="message {% if message.sender == user %}own{% else %}other{% endif %}">
+                        <div class="message-bubble">
+                            {{ message.message }}
+                        </div>
+                        <div class="message-meta">
+                            {{ message.sender.mobile_number }} • {{ message.timestamp|date:"H:i" }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-message-input" class="form-control" placeholder="Type your message..." maxlength="500">
+                <button id="chat-message-submit" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <a href="{% url 'view_booking' booking.id %}" class="btn btn-secondary">Back to Booking</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const bookingId = {{ booking.id }};
+const chatSocket = new WebSocket(
+    'ws://' + window.location.host + '/ws/chat/' + bookingId + '/'
+);
+
+const messagesContainer = $('#chat-messages');
+const messageInput = $('#chat-message-input');
+const submitButton = $('#chat-message-submit');
+
+// Scroll to bottom
+function scrollToBottom() {
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+}
+
+// Add message to chat
+function addMessage(data) {
+    const isOwn = data.sender === '{{ user.mobile_number }}';
+    const messageClass = isOwn ? 'own' : 'other';
+    
+    const messageHtml = `
+        <div class="message ${messageClass}">
+            <div class="message-bubble">
+                ${data.message}
+            </div>
+            <div class="message-meta">
+                ${data.sender} • ${new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.append(messageHtml);
+    scrollToBottom();
+}
+
+// WebSocket message handler
+chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    addMessage(data);
+};
+
+chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+};
+
+// Send message function
+function sendMessage() {
+    const message = messageInput.val().trim();
+    if (message) {
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+        messageInput.val('');
+    }
+}
+
+// Event handlers
+submitButton.click(sendMessage);
+
+messageInput.keypress(function(e) {
+    if (e.which === 13) { // Enter key
+        sendMessage();
+    }
+});
+
+// Focus input and scroll to bottom on load
+$(document).ready(function() {
+    messageInput.focus();
+    scrollToBottom();
+});
+</script>
+{% endblock %}

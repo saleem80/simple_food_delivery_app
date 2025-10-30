@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Booking - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Create New Booking</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Pickup Details</h4>
+                    <div class="form-group">
+                        <label for="{{ form.pickup_address.id_for_label }}" class="form-label">Pickup Address *</label>
+                        {{ form.pickup_address }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.pickup_contact_name.id_for_label }}" class="form-label">Contact Name *</label>
+                        {{ form.pickup_contact_name }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.pickup_contact_phone.id_for_label }}" class="form-label">Contact Phone *</label>
+                        {{ form.pickup_contact_phone }}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Delivery Details</h4>
+                    <div class="form-group">
+                        <label for="{{ form.delivery_address.id_for_label }}" class="form-label">Delivery Address *</label>
+                        {{ form.delivery_address }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.delivery_contact_name.id_for_label }}" class="form-label">Contact Name *</label>
+                        {{ form.delivery_contact_name }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.delivery_contact_phone.id_for_label }}" class="form-label">Contact Phone *</label>
+                        {{ form.delivery_contact_phone }}
+                    </div>
+                </div>
+            </div>
+            
+            <h4>Item Details</h4>
+            <div class="form-group">
+                <label for="{{ form.item_description.id_for_label }}" class="form-label">Item Description *</label>
+                {{ form.item_description }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.special_instructions.id_for_label }}" class="form-label">Special Instructions</label>
+                {{ form.special_instructions }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.estimated_price.id_for_label }}" class="form-label">Estimated Price ($)</label>
+                {{ form.estimated_price }}
+            </div>
+            
+            <div class="d-flex gap-1">
+                <button type="submit" class="btn btn-primary">Create Booking</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}

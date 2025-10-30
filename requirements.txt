@@ -1,0 +1,9 @@
+Django==5.2.7
+channels==4.0.0
+channels-redis==4.1.0
+redis==4.5.4
+django-cors-headers==4.0.0
+gunicorn==21.2.0
+whitenoise==6.5.0
+psycopg2-binary==2.9.7
+daphne==4.0.0

@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking #{{ booking.id }} - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Booking #{{ booking.id }}</h3>
+        <span class="badge badge-{{ booking.status }}">
+            {{ booking.get_status_display }}
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Pickup Details</h4>
+                <p><strong>Address:</strong><br>{{ booking.pickup_address }}</p>
+                <p><strong>Contact:</strong> {{ booking.pickup_contact_name }}</p>
+                <p><strong>Phone:</strong> {{ booking.pickup_contact_phone }}</p>
+            </div>
+            
+            <div class="col-md-6">
+                <h4>Delivery Details</h4>
+                <p><strong>Address:</strong><br>{{ booking.delivery_address }}</p>
+                <p><strong>Contact:</strong> {{ booking.delivery_contact_name }}</p>
+                <p><strong>Phone:</strong> {{ booking.delivery_contact_phone }}</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <h4>Item Details</h4>
+                <p><strong>Description:</strong><br>{{ booking.item_description }}</p>
+                {% if booking.special_instructions %}
+                    <p><strong>Special Instructions:</strong><br>{{ booking.special_instructions }}</p>
+                {% endif %}
+                <p><strong>Estimated Price:</strong> ${{ booking.estimated_price }}</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Booking Information</h4>
+                <p><strong>Customer:</strong> {{ booking.customer.mobile_number }}</p>
+                {% if booking.delivery_partner %}
+                    <p><strong>Delivery Partner:</strong> {{ booking.delivery_partner.mobile_number }}</p>
+                {% endif %}
+                <p><strong>Created:</strong> {{ booking.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Last Updated:</strong> {{ booking.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+            
+            <div class="col-md-6">
+                <h4>Status Timeline</h4>
+                <div class="timeline">
+                    <div class="timeline-item {% if booking.created_at %}active{% endif %}">
+                        <strong>Booking Created</strong>
+                        {% if booking.created_at %}
+                            <br><small>{{ booking.created_at|date:"M d, Y H:i" }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    {% if booking.assigned_at %}
+                        <div class="timeline-item active">
+                            <strong>Assigned to Delivery Partner</strong>
+                            <br><small>{{ booking.assigned_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if booking.started_at %}
+                        <div class="timeline-item active">
+                            <strong>Delivery Started</strong>
+                            <br><small>{{ booking.started_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if booking.reached_at %}
+                        <div class="timeline-item active">
+                            <strong>Reached Pickup Location</strong>
+                            <br><small>{{ booking.reached_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if booking.collected_at %}
+                        <div class="timeline-item active">
+                            <strong>Items Collected</strong>
+                            <br><small>{{ booking.collected_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if booking.delivered_at %}
+                        <div class="timeline-item active">
+                            <strong>Delivered</strong>
+                            <br><small>{{ booking.delivered_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if booking.cancelled_at %}
+                        <div class="timeline-item cancelled">
+                            <strong>Cancelled</strong>
+                            <br><small>{{ booking.cancelled_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-1 mt-3">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+            
+            {% if user.user_type == 'customer' and booking.can_be_cancelled %}
+                <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger">Cancel Booking</a>
+            {% endif %}
+            
+            {% if booking.status == 'assigned' or booking.status == 'started' or booking.status == 'reached' or booking.status == 'collected' %}
+                {% if user == booking.customer or user == booking.delivery_partner %}
+                    <a href="{% url 'chat_room' booking.id %}" class="btn btn-success">Chat with {{ user == booking.customer|yesno:"Delivery Partner,Customer" }}</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+
+.col-md-12 {
+    width: 100%;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 1rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 0.5rem 0;
+    border-left: 2px solid #e9ecef;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-item.active {
+    border-left-color: #28a745;
+}
+
+.timeline-item.cancelled {
+    border-left-color: #dc3545;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0.75rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e9ecef;
+}
+
+.timeline-item.active::before {
+    background: #28a745;
+}
+
+.timeline-item.cancelled::before {
+    background: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}

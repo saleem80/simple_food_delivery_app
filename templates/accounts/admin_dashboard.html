@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.get_full_name|default:user.mobile_number }}!</h1>
+    <p>Admin Dashboard</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-number">{{ all_bookings.count }}</div>
+        <div class="stat-label">Total Bookings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ delivery_partners.count }}</div>
+        <div class="stat-label">Delivery Partners</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>All Bookings</h3>
+    </div>
+    <div class="card-body">
+        {% if all_bookings %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Delivery Partner</th>
+                            <th>Pickup</th>
+                            <th>Delivery</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in all_bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+                            <td>{{ booking.customer.mobile_number }}</td>
+                            <td>
+                                {% if booking.delivery_partner %}
+                                    {{ booking.delivery_partner.mobile_number }}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ booking.pickup_address|truncatechars:20 }}</td>
+                            <td>{{ booking.delivery_address|truncatechars:20 }}</td>
+                            <td>
+                                <span class="badge badge-{{ booking.status }}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ booking.created_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'view_booking' booking.id %}" class="btn btn-sm btn-secondary">View</a>
+                                    {% if booking.status == 'pending' %}
+                                        <select class="form-control form-control-sm assign-delivery-partner" 
+                                                data-booking-id="{{ booking.id }}" style="width: auto;">
+                                            <option value="">Assign Partner</option>
+                                            {% for partner in delivery_partners %}
+                                                <option value="{{ partner.id }}">{{ partner.mobile_number }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <p>No bookings yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.assign-delivery-partner').change(function() {
+        const bookingId = $(this).data('booking-id');
+        const deliveryPartnerId = $(this).val();
+        const select = $(this);
+        
+        if (deliveryPartnerId && confirm('Are you sure you want to assign this booking?')) {
+            $.ajax({
+                url: '{% url "assign_booking" %}',
+                method: 'POST',
+                data: JSON.stringify({
+                    booking_id: bookingId,
+                    delivery_partner_id: deliveryPartnerId
+                }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error assigning booking: ' + response.error);
+                        select.val('');
+                    }
+                },
+                error: function() {
+                    alert('Error assigning booking. Please try again.');
+                    select.val('');
+                }
+            });
+        } else {
+            select.val('');
+        }
+    });
+});
+</script>
+{% endblock %}

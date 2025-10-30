@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Partner Dashboard - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.get_full_name|default:user.mobile_number }}!</h1>
+    <p>Delivery Partner Dashboard</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-number">{{ bookings.count }}</div>
+        <div class="stat-label">Assigned Bookings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ bookings|length }}</div>
+        <div class="stat-label">Active Deliveries</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>My Assigned Bookings</h3>
+    </div>
+    <div class="card-body">
+        {% if bookings %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Pickup</th>
+                            <th>Delivery</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+                            <td>{{ booking.customer.mobile_number }}</td>
+                            <td>{{ booking.pickup_address|truncatechars:30 }}</td>
+                            <td>{{ booking.delivery_address|truncatechars:30 }}</td>
+                            <td>
+                                <span class="badge badge-{{ booking.status }}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'view_booking' booking.id %}" class="btn btn-sm btn-secondary">View</a>
+                                    {% if booking.status == 'assigned' %}
+                                        <button class="btn btn-sm btn-success update-status" data-booking-id="{{ booking.id }}" data-status="started">Start</button>
+                                    {% elif booking.status == 'started' %}
+                                        <button class="btn btn-sm btn-warning update-status" data-booking-id="{{ booking.id }}" data-status="reached">Reached</button>
+                                    {% elif booking.status == 'reached' %}
+                                        <button class="btn btn-sm btn-warning update-status" data-booking-id="{{ booking.id }}" data-status="collected">Collected</button>
+                                    {% elif booking.status == 'collected' %}
+                                        <button class="btn btn-sm btn-success update-status" data-booking-id="{{ booking.id }}" data-status="delivered">Delivered</button>
+                                    {% endif %}
+                                    {% if booking.status == 'assigned' or booking.status == 'started' or booking.status == 'reached' or booking.status == 'collected' %}
+                                        <a href="{% url 'chat_room' booking.id %}" class="btn btn-sm btn-primary">Chat</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <p>No bookings assigned yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.update-status').click(function() {
+        const bookingId = $(this).data('booking-id');
+        const newStatus = $(this).data('status');
+        const button = $(this);
+        
+        if (confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) {
+            $.ajax({
+                url: '{% url "update_booking_status" %}',
+                method: 'POST',
+                data: JSON.stringify({
+                    booking_id: bookingId,
+                    status: newStatus
+                }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error updating status: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('Error updating status. Please try again.');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

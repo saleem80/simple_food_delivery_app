@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Dashboard - Food Delivery{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.get_full_name|default:user.mobile_number }}!</h1>
+    <p>Customer Dashboard</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-number">{{ bookings.count }}</div>
+        <div class="stat-label">Total Bookings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ bookings|length }}</div>
+        <div class="stat-label">Active Bookings</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>My Bookings</h3>
+        <a href="{% url 'create_booking' %}" class="btn btn-primary">New Booking</a>
+    </div>
+    <div class="card-body">
+        {% if bookings %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pickup</th>
+                            <th>Delivery</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+                            <td>{{ booking.pickup_address|truncatechars:30 }}</td>
+                            <td>{{ booking.delivery_address|truncatechars:30 }}</td>
+                            <td>
+                                <span class="badge badge-{{ booking.status }}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ booking.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'view_booking' booking.id %}" class="btn btn-sm btn-secondary">View</a>
+                                {% if booking.can_be_cancelled %}
+                                    <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                {% endif %}
+                                {% if booking.status == 'assigned' or booking.status == 'started' or booking.status == 'reached' or booking.status == 'collected' %}
+                                    <a href="{% url 'chat_room' booking.id %}" class="btn btn-sm btn-success">Chat</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <p>No bookings yet.</p>
+                <a href="{% url 'create_booking' %}" class="btn btn-primary">Create Your First Booking</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
