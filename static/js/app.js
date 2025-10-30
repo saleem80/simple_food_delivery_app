@@ -259,6 +259,27 @@ $(document).ready(function() {
         }
     }
     
+    // Keep server alive with health check requests
+    function keepServerAlive() {
+        $.ajax({
+            url: '/health/',
+            method: 'GET',
+            timeout: 5000,
+            success: function() {
+                console.log('Health check: Server is alive');
+            },
+            error: function() {
+                console.log('Health check: Failed to reach server');
+            }
+        });
+    }
+    
+    // Call health check every 30 seconds to prevent server sleep
+    setInterval(keepServerAlive, 30000);
+    
+    // Call immediately on page load
+    keepServerAlive();
+    
     $(window).on('resize', updateLayout);
     updateLayout();
 });
