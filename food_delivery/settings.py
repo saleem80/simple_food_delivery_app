@@ -160,8 +160,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Production settings (controlled by environment variables)
 import os
 
-# Check if we're in production
-PRODUCTION = os.environ.get('DJANGO_PRODUCTION', 'False').lower() == 'true'
+# Check if we're in production (Render or other platforms)
+PRODUCTION = os.environ.get('DJANGO_PRODUCTION', 'False').lower() == 'true' or os.environ.get('RENDER', 'False').lower() == 'true'
 
 if PRODUCTION:
     # Production settings
@@ -176,27 +176,44 @@ if PRODUCTION:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    # Database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'fooddelivery'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+    # Database - use dj_database_url for Render
+    if os.environ.get('DATABASE_URL'):
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
         }
-    }
+    else:
+        # Fallback to PostgreSQL config
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME', 'fooddelivery'),
+                'USER': os.environ.get('DB_USER', 'postgres'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+            }
+        }
 
     # Redis for Django Channels
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [('127.0.0.1', 6379)],
+    if os.environ.get('REDIS_URL'):
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels_redis.core.RedisChannelLayer',
+                'CONFIG': {
+                    'hosts': [os.environ.get('REDIS_URL')],
+                },
             },
-        },
-    }
+        }
+    else:
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels_redis.core.RedisChannelLayer',
+                'CONFIG': {
+                    'hosts': [('127.0.0.1', 6379)],
+                },
+            },
+        }
 
     # Static files (CSS, JavaScript, Images)
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
