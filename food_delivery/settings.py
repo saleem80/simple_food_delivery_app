@@ -176,30 +176,15 @@ if PRODUCTION:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    # Database - use dj_database_url for Render
-    if os.environ.get('DATABASE_URL'):
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.config(
-                default=os.environ.get('DATABASE_URL'),
-                conn_max_age=600,
-                conn_health_checks=True,
-            )
+    # Database - use SQLite for Render (simpler deployment)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
-    else:
-        # Fallback to PostgreSQL config
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('DB_NAME', 'fooddelivery'),
-                'USER': os.environ.get('DB_USER', 'postgres'),
-                'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-                'HOST': os.environ.get('DB_HOST', 'localhost'),
-                'PORT': os.environ.get('DB_PORT', '5432'),
-            }
-        }
+    }
 
-    # Redis for Django Channels
+    # Redis for Django Channels - use Render Redis URL if available
     if os.environ.get('REDIS_URL'):
         CHANNEL_LAYERS = {
             'default': {
@@ -210,12 +195,10 @@ if PRODUCTION:
             },
         }
     else:
+        # Fallback to in-memory for development
         CHANNEL_LAYERS = {
             'default': {
-                'BACKEND': 'channels_redis.core.RedisChannelLayer',
-                'CONFIG': {
-                    'hosts': [('127.0.0.1', 6379)],
-                },
+                'BACKEND': 'channels.layers.InMemoryChannelLayer',
             },
         }
 
