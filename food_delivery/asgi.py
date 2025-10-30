@@ -11,30 +11,24 @@ import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'food_delivery.settings')
 
-# Lazy application loader to avoid premature imports
-class ASGIApplication:
-    def __init__(self):
-        self._application = None
+# Import Django settings
+import django
+from django.conf import settings
+from django.core.asgi import get_asgi_application
 
-    async def __call__(self, scope, receive, send):
-        if self._application is None:
-            # Import Django and channels only when first called
-            import django
-            django.setup()
+# Configure Django
+django.setup()
 
-            from django.core.asgi import get_asgi_application
-            from channels.routing import ProtocolTypeRouter, URLRouter
-            from channels.auth import AuthMiddlewareStack
-            import chat.routing
+# Standard Django ASGI application with Channels
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import chat.routing
 
-            self._application = ProtocolTypeRouter({
-                "http": get_asgi_application(),
-                "websocket": AuthMiddlewareStack(
-                    URLRouter(
-                        chat.routing.websocket_urlpatterns
-                    )
-                ),
-            })
-        await self._application(scope, receive, send)
-
-application = ASGIApplication()
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            chat.routing.websocket_urlpatterns
+        )
+    ),
+})
