@@ -8,22 +8,33 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
 import os
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'food_delivery.settings')
 
-# Import routing inside the application to avoid premature model loading
-def get_application():
-    import chat.routing
-    return ProtocolTypeRouter({
-        "http": get_asgi_application(),
-        "websocket": AuthMiddlewareStack(
-            URLRouter(
-                chat.routing.websocket_urlpatterns
-            )
-        ),
-    })
+# Lazy application loader to avoid premature imports
+class ASGIApplication:
+    def __init__(self):
+        self._application = None
 
-application = get_application()
+    def __call__(self, scope):
+        if self._application is None:
+            # Import Django and channels only when first called
+            import django
+            django.setup()
+
+            from django.core.asgi import get_asgi_application
+            from channels.routing import ProtocolTypeRouter, URLRouter
+            from channels.auth import AuthMiddlewareStack
+            import chat.routing
+
+            self._application = ProtocolTypeRouter({
+                "http": get_asgi_application(),
+                "websocket": AuthMiddlewareStack(
+                    URLRouter(
+                        chat.routing.websocket_urlpatterns
+                    )
+                ),
+            })
+        return self._application(scope)
+
+application = ASGIApplication()
