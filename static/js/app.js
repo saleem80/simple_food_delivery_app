@@ -262,14 +262,3 @@ $(document).ready(function() {
     $(window).on('resize', updateLayout);
     updateLayout();
 });
-
-// Service Worker for offline support (basic)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').then(function(registration) {
-            console.log('SW registered: ', registration);
-        }, function(registrationError) {
-            console.log('SW registration failed: ', registrationError);
-        });
-    });
-}

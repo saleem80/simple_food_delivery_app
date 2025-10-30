@@ -26,12 +26,23 @@ A simple food delivery web app built with Django.
    python manage.py shell < create_sample_data.py
    ```
 
-4. Start server:
+4. Start servers (both for full functionality):
+
+   **For WebSocket/Chat support (Daphne):**
    ```bash
-   python manage.py runserver
+   python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'food_delivery.settings'); import django; django.setup(); from daphne.cli import CommandLineInterface; CommandLineInterface().run(['food_delivery.asgi:application', '--port', '8000'])"
    ```
 
-5. Open http://127.0.0.1:8000 in browser
+   **For regular development (Django dev server):**
+   ```bash
+   python manage.py runserver 8001
+   ```
+
+   Or run both simultaneously for full functionality!
+
+5. Open browsers:
+   - **Chat/WebSocket features:** http://127.0.0.1:8000
+   - **Regular features:** http://127.0.0.1:8001
 
 ## Test Accounts
 
@@ -39,12 +50,13 @@ A simple food delivery web app built with Django.
 - Mobile: 9999999999
 - OTP: 1234
 
-**Delivery Partner:**
-- Mobile: 8888888888
-- OTP: 1234
+**Delivery Partners:**
+- Mobile: 8888888888 (John Doe)
+- Mobile: 7777777777 (Jane Smith)
+- Mobile: 6666666666 (Mike Johnson)
 
 **Customer:**
-- Mobile: 7777777777
+- Mobile: 5555555555
 - OTP: 1234
 
 ## Usage
