@@ -16,7 +16,7 @@ class ASGIApplication:
     def __init__(self):
         self._application = None
 
-    def __call__(self, scope):
+    async def __call__(self, scope, receive, send):
         if self._application is None:
             # Import Django and channels only when first called
             import django
@@ -35,6 +35,6 @@ class ASGIApplication:
                     )
                 ),
             })
-        return self._application(scope)
+        await self._application(scope, receive, send)
 
 application = ASGIApplication()
