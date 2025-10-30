@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-2_u68h2fh75tr5t)7n##_7mob$1cpj3@4_d-sy@uq=bino$ubq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -166,9 +166,20 @@ PRODUCTION = os.environ.get('DJANGO_PRODUCTION', 'False').lower() == 'true' or o
 if PRODUCTION:
     # Production settings
     DEBUG = False
-    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'simple-food-delivery-app.onrender.com').split(',') if os.environ.get('ALLOWED_HOSTS') else ['simple-food-delivery-app.onrender.com']
+
+    # CSRF and CORS settings for production
+    CSRF_TRUSTED_ORIGINS = [
+        'https://simple-food-delivery-app.onrender.com',
+        'https://www.simple-food-delivery-app.onrender.com',
+    ]
+    CORS_ALLOWED_ORIGINS = [
+        'https://simple-food-delivery-app.onrender.com',
+        'https://www.simple-food-delivery-app.onrender.com',
+    ]
 
     # Security settings
+    SECURE_SSL_REDIRECT = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
